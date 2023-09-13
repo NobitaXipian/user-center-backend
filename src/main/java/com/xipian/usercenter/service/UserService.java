@@ -1,7 +1,7 @@
 package com.xipian.usercenter.service;
 
-import com.xipian.usercenter.model.domain.User;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.xipian.usercenter.model.domain.User;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -13,6 +13,7 @@ import javax.servlet.http.HttpServletRequest;
 public interface UserService extends IService<User> {
 
     /**
+     *用户注册
      *
      * @param userAccount 用户账户
      * @param userPassword 用户密码
@@ -21,7 +22,21 @@ public interface UserService extends IService<User> {
      */
     long  userRegister(String userAccount,String userPassword,String checkPassword);
 
-    User doLogin(String userAccount, String userPassword, HttpServletRequest request);
+    /**
+     * 用户登录
+     *
+     * @param userAccount
+     * @param userPassword
+     * @param request
+     * @return 用户实例
+     */
+    User userLogin(String userAccount, String userPassword, HttpServletRequest request);
 
-
+    /**
+     * 用户信息脱敏
+     *
+     * @param originUser
+     * @return 脱敏后的用户实例
+     */
+    User getSafetyUser(User originUser);
 }
