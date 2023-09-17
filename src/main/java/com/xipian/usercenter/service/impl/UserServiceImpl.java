@@ -3,6 +3,8 @@ package com.xipian.usercenter.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.xipian.usercenter.common.ErrorCode;
+import com.xipian.usercenter.exception.BusinessException;
 import com.xipian.usercenter.mapper.UserMapper;
 import com.xipian.usercenter.model.domain.User;
 import com.xipian.usercenter.service.UserService;
@@ -43,16 +45,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     public long userRegister(String userAccount, String userPassword, String checkPassword) {
 
         if (StringUtils.isAnyBlank(userAccount,userPassword,checkPassword)){
-            //TODO 抛出自定义异常类
-            return -1;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"参数为空");
         }
 
         if (userAccount.length()<4){
-            return -1;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"用户账号过短");
         }
 
         if (userPassword.length() < 8 || checkPassword.length() < 8){
-            return -1;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"用户密码过短");
+
         }
 
         //校验账号不包含特殊字符
@@ -60,11 +62,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         String validPattern = "^[\\u4E00-\\u9FA5A-Za-z0-9_]+$";
         Matcher matcher = Pattern.compile(validPattern).matcher(userAccount);
         if (!matcher.find()){
-            return -1;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"用户账号不能包含特殊字符");
         }
 
         if (!userPassword.equals(checkPassword)){
-            return -1;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"用户两次输入密码不一致");
         }
 
         //校验账户名不能重复
@@ -72,7 +74,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         userQueryWrapper.eq("userAccount",userAccount);
         int count = this.count(userQueryWrapper);
         if (count > 0){
-            return -1;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"用户账号重复");
         }
 
         //加密密码
@@ -87,7 +89,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         boolean saveResult = this.save(user);
 
         if (!saveResult){
-            return -1;
+            throw new BusinessException(ErrorCode.UPDATE_ERROR,"未保存用户");
         }
 
         return user.getId();
@@ -97,15 +99,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     public User userLogin(String userAccount, String userPassword, HttpServletRequest request) {
 
         if (StringUtils.isAnyBlank(userAccount,userPassword)){
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+
         }
 
         if (userAccount.length()<4){
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"用户账号过短");
         }
 
         if (userPassword.length() < 8 ){
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"用户密码过短");
         }
 
         //校验账号不包含特殊字符
@@ -113,7 +116,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         String validPattern = "^[\\u4E00-\\u9FA5A-Za-z0-9_]+$";
         Matcher matcher = Pattern.compile(validPattern).matcher(userAccount);
         if (!matcher.find()){
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"用户账号不能包含特殊字符");
         }
 
         //加密密码
@@ -127,7 +130,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         //用户不存在或账号密码不匹配
         if (user == null){
             log.info("user login failed, userAccount cannot match the userPassword");
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"用户不存在或账号密码不匹配");
         }
         //用户信息脱敏
         User safetyUser = getSafetyUser(user);
@@ -145,6 +148,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      */
     @Override
     public User getSafetyUser(User originUser){
+        if (originUser == null){
+            return null;
+        }
         User safetyUser = new User();
         safetyUser.setId(originUser.getId());
         safetyUser.setUsername(originUser.getUsername());
@@ -157,6 +163,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         safetyUser.setUserStatus(originUser.getUserStatus());
         safetyUser.setCreateTime(originUser.getCreateTime());
         return safetyUser;
+    }
+
+    /**
+     * 用户注销
+     *
+     * @param request
+     */
+    @Override
+    public int userLogout(HttpServletRequest request) {
+        //移除用户登录态
+        request.getSession().removeAttribute(USER_LOGIN_STATE);
+        return 1;
     }
 }
 
