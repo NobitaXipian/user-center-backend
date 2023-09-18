@@ -125,7 +125,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         //查询用户是否存在
         QueryWrapper<User> userQueryWrapper = new QueryWrapper<>();
         userQueryWrapper.eq("userAccount",userAccount);
-        userQueryWrapper.eq("userPassword",userPassword);
+        userQueryWrapper.eq("userPassword",encryptPassword);
         User user = userMapper.selectOne(userQueryWrapper);
         //用户不存在或账号密码不匹配
         if (user == null){
