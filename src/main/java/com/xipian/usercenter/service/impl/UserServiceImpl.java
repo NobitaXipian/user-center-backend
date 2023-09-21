@@ -79,7 +79,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
         //加密密码
 
-        String encryptPassword = DigestUtils.md5DigestAsHex(("SALT"+userPassword).getBytes());
+        String encryptPassword = DigestUtils.md5DigestAsHex((SALT+userPassword).getBytes());
 
         //数据库插入用户
         User user = new User();
@@ -120,7 +120,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
 
         //加密密码
-        String encryptPassword = DigestUtils.md5DigestAsHex(("SALT"+userPassword).getBytes());
+        String encryptPassword = DigestUtils.md5DigestAsHex((SALT+userPassword).getBytes());
 
         //查询用户是否存在
         QueryWrapper<User> userQueryWrapper = new QueryWrapper<>();
